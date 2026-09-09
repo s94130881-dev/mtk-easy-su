@@ -4,13 +4,32 @@ apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.google.firebase.crashlytics'
 
 final Properties env = new Properties()
-file("${rootDir}/env.properties").withInputStream { env.load(it) }
+
+def envFile = file("${rootDir}/env.properties")
+
+if (envFile.exists()) {
+    envFile.withInputStream {
+        env.load(it)
+    }
+} else {
+    println("WARNING: env.properties não encontrado. Usando valores padrão.")
+}
 
 android {
 
     namespace 'juniojsv.mtk.easy.su'
 
     compileSdk 36
+
+    defaultConfig {
+        applicationId 'juniojsv.mtk.easy.su'
+
+        minSdkVersion 23
+        targetSdkVersion 36
+
+        versionCode 211
+        versionName "2.2.2"
+    }
 
     applicationVariants.configureEach { variant ->
         variant.outputs.configureEach {
@@ -19,11 +38,18 @@ android {
     }
 
     signingConfigs {
+
         release {
-            storeFile file("${rootDir}/key.jks")
-            storePassword env['key.password']
-            keyPassword env['key.password']
-            keyAlias env['key.alias']
+            def keyFile = file("${rootDir}/key.jks")
+
+            if (keyFile.exists()) {
+                storeFile keyFile
+                storePassword env['key.password']
+                keyPassword env['key.password']
+                keyAlias env['key.alias']
+            } else {
+                println("WARNING: key.jks não encontrado.")
+            }
         }
     }
 
@@ -36,32 +62,40 @@ android {
         jvmTarget = "17"
     }
 
-    defaultConfig {
-        applicationId 'juniojsv.mtk.easy.su'
-
-        minSdkVersion 23
-        targetSdkVersion 36
-
-        versionCode 211
-        versionName "2.2.2"
-    }
-
     buildTypes {
-        configureEach {
-            resValue "string", "application_advertising_id",
-                    env['application.advertising.id']
 
-            resValue "string", "interstitial_advertising_id",
-                    env['interstitial.advertising.id']
+        debug {
+            resValue "string",
+                    "application_advertising_id",
+                    env.getProperty(
+                            "application.advertising.id",
+                            "ca-app-pub-3940256099942544/1033173712"
+                    )
 
-            resValue "string", "banner_advertising_id",
-                    env['banner.advertising.id']
+            resValue "string",
+                    "interstitial_advertising_id",
+                    env.getProperty(
+                            "interstitial.advertising.id",
+                            "ca-app-pub-3940256099942544/1033173712"
+                    )
 
-            resValue "string", "admob_test_device",
-                    env['admob.test.device']
+            resValue "string",
+                    "banner_advertising_id",
+                    env.getProperty(
+                            "banner.advertising.id",
+                            "ca-app-pub-3940256099942544/6300978111"
+                    )
+
+            resValue "string",
+                    "admob_test_device",
+                    env.getProperty(
+                            "admob.test.device",
+                            ""
+                    )
         }
 
         release {
+
             minifyEnabled true
             shrinkResources true
 
@@ -72,7 +106,9 @@ android {
                     'proguard-rules.pro'
             )
 
-            signingConfig signingConfigs.release
+            if (file("${rootDir}/key.jks").exists()) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 
@@ -100,6 +136,7 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'
 
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
 
     implementation platform(
