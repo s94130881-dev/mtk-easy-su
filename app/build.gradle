@@ -1,7 +1,5 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'com.google.gms.google-services'
-apply plugin: 'com.google.firebase.crashlytics'
 
 final Properties env = new Properties()
 
@@ -34,22 +32,6 @@ android {
     applicationVariants.configureEach { variant ->
         variant.outputs.configureEach {
             outputFileName = "mtk-easy-su-v${defaultConfig.versionName}.apk"
-        }
-    }
-
-    signingConfigs {
-
-        release {
-            def keyFile = file("${rootDir}/key.jks")
-
-            if (keyFile.exists()) {
-                storeFile keyFile
-                storePassword env['key.password']
-                keyPassword env['key.password']
-                keyAlias env['key.alias']
-            } else {
-                println("WARNING: key.jks não encontrado.")
-            }
         }
     }
 
@@ -95,7 +77,6 @@ android {
         }
 
         release {
-
             minifyEnabled true
             shrinkResources true
 
@@ -105,10 +86,6 @@ android {
                     ),
                     'proguard-rules.pro'
             )
-
-            if (file("${rootDir}/key.jks").exists()) {
-                signingConfig signingConfigs.release
-            }
         }
     }
 
@@ -138,11 +115,4 @@ dependencies {
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
 
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
-
-    implementation platform(
-            'com.google.firebase:firebase-bom:33.11.0'
-    )
-
-    implementation 'com.google.firebase:firebase-crashlytics-ktx'
-    implementation 'com.google.firebase:firebase-analytics-ktx'
 }
